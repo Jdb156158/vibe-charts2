@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"accent","type":"color","label":"强调色","default":"#8be7cf"},{"id":"intro","type":"string","label":"开场标题","default":"黑玻璃，让数据发光"},{"id":"ending","type":"string","label":"片尾结语","default":"也看清方向。"}]'>
+<head><meta charset="utf-8"><title>Glass Statistics · Charts in Motion 03</title><style>@font-face{font-family:SC;src:url('assets/fonts/NotoSansSC-500.woff');font-weight:500}@font-face{font-family:SC;src:url('assets/fonts/NotoSansSC-700.woff');font-weight:700}html,body{margin:0;background:#080b10;color:#edf1f3}canvas{display:block;width:1920px;height:1080px}</style><script src="vendor/gsap.min.js"></script></head>
+<body><canvas id="film" width="1920" height="1080" data-composition-id="glass-stats" data-duration="15" data-width="1920" data-height="1080" data-fps="60" data-om-id="film"></canvas><script src="vendor/om.js"></script><script>
+const canvas=document.querySelector('#film'),g=canvas.getContext('2d'),bg=document.createElement('canvas');bg.width=1920;bg.height=1080;const b=bg.getContext('2d');
+const V=OM.vars(),C=[V.accent||'#8be7cf','#b7a3ed','#83b7e9','#e8c38e'],WHITE='#edf1f3',MUTED='#a0aab9',B=60/128,starts=[0,4*B,9*B,14*B,19*B,23*B,28*B];
+const grain=document.createElement('canvas');grain.width=grain.height=128;const ng=grain.getContext('2d'),nd=ng.createImageData(128,128);let seed=7351;for(let i=0;i<nd.data.length;i+=4){seed=(1664525*seed+1013904223)>>>0;const v=seed>>>24;nd.data[i]=nd.data[i+1]=nd.data[i+2]=v;nd.data[i+3]=255;}ng.putImageData(nd,0,0);const grainPattern=g.createPattern(grain,'repeat');
+const clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>1-Math.pow(1-clamp(x),4),lerp=(a,b,p)=>a+(b-a)*p;
+function text(s,x,y,size=28,color=WHITE,align='left',serif=false,weight=500){g.fillStyle=color;g.font=serif?`italic ${size}px Georgia`:`${weight} ${size}px SC`;g.textAlign=align;g.textBaseline='middle';g.fillText(s,x,y)}
+function rr(x,y,w,h,r=18,fill){g.beginPath();g.roundRect(x,y,w,h,r);if(fill){g.fillStyle=fill;g.fill()}}
+function line(x,y,x2,y2,c='#ffffff18',w=1){g.beginPath();g.moveTo(x,y);g.lineTo(x2,y2);g.strokeStyle=c;g.lineWidth=w;g.stroke()}
+function dot(x,y,r,c){g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=c;g.fill()}
+function pill(s,x,y,w=140,color=WHITE){rr(x,y,w,40,20,'#ffffff0d');g.strokeStyle='#ffffff16';g.lineWidth=1;g.stroke();text(s,x+w/2,y+20,18,color,'center')}
+function background(t){
+ b.fillStyle='#080b10';b.fillRect(0,0,1920,1080);
+ const lights=[[1250+180*Math.sin(t*.22),390+130*Math.cos(t*.31),580,'#275b5870'],[1660+60*Math.cos(t*.27),710+100*Math.sin(t*.29),530,'#4d416c7a'],[430+100*Math.sin(t*.18),970,620,'#253b512e']];
+ for(const[x,y,r,c]of lights){let grad=b.createRadialGradient(x,y,0,x,y,r);grad.addColorStop(0,c);grad.addColorStop(1,c.slice(0,7)+'00');b.fillStyle=grad;b.fillRect(0,0,1920,1080)}
+ b.save();b.strokeStyle='#afcfe51c';b.lineWidth=2;for(let i=0;i<4;i++){b.beginPath();b.ellipse(1480,530,220+i*94,530+i*45,-.72+t*.012,0,Math.PI*2);b.stroke()}b.restore();
+ for(let i=0;i<54;i++){const x=(i*487.31+Math.sin(i*9)*170+15*t)%1920,y=(i*239.17+Math.cos(i)*100)%1080;b.fillStyle=i%3?'#ccdce31a':'#b0e6db30';b.fillRect(x,y,1.4,1.4)}
+ g.drawImage(bg,0,0);
+}
+function glass(){
+ g.save();g.shadowColor='#00000080';g.shadowBlur=48;g.shadowOffsetY=28;rr(0,0,850,660,30,'#090d1380');g.restore();
+ g.save();rr(0,0,850,660,30);g.clip();g.save();g.setTransform(1,0,0,1,0,0);g.filter='blur(26px)';g.drawImage(bg,0,0);g.restore();
+ let fill=g.createLinearGradient(0,0,850,660);fill.addColorStop(0,'#ffffff0d');fill.addColorStop(.4,'#10151bb0');fill.addColorStop(1,'#141820bc');g.fillStyle=fill;g.fillRect(0,0,850,660);
+ let sheen=g.createLinearGradient(0,0,850,660);sheen.addColorStop(0,'#d9f2ff0c');sheen.addColorStop(.46,'#ffffff00');sheen.addColorStop(1,'#cdbaff09');g.fillStyle=sheen;g.fillRect(0,0,850,660);g.globalAlpha=.045;g.fillStyle=grainPattern;g.fillRect(0,0,850,660);g.restore();
+ let edge=g.createLinearGradient(0,0,850,660);edge.addColorStop(0,'#d2e8f94f');edge.addColorStop(.35,'#ffffff12');edge.addColorStop(.8,'#ffffff24');edge.addColorStop(1,'#d8c5ff38');rr(0,0,850,660,30);g.strokeStyle=edge;g.lineWidth=1.5;g.stroke();
+ line(34,1,790,1,'#ffffff20');
+}
+function shell(label,value,unit=''){glass();text(label,42,46,23,MUTED);text(value,42,109,60,WHITE,'left',false,700);const tw=g.measureText(value).width;text(unit,60+tw,117,21,MUTED);pill('DEMO / 本月',655,33,151);line(42,160,808,160)}
+function footer(left,right=''){line(42,570,808,570);text(left,42,615,22,MUTED);text(right,808,615,21,C[0],'right')}
+function tooltip(s,x,y,w=142){rr(x,y,w,46,14,'#e7f1ef');text(s,x+w/2,y+23,20,'#132521','center')}
+function cursor(x,y,u){if(u<.8)return;g.save();g.translate(x,y);g.shadowColor='#0008';g.shadowBlur=6;g.beginPath();g.moveTo(0,0);g.lineTo(0,27);g.lineTo(8,20);g.lineTo(14,32);g.lineTo(20,29);g.lineTo(14,18);g.lineTo(25,17);g.closePath();g.fillStyle='#f1f5f4';g.fill();g.strokeStyle='#1119';g.lineWidth=1.5;g.stroke();g.restore()}
+function funnel(u){
+ shell('CONVERSION / 转化漏斗','15','% 总转化');const vals=[12000,7200,3600,1800],names=['访问','加购','结账','购买'];
+ for(let i=0;i<4;i++){let p=ease((u+.08-i*.08)/.62),x=66+i*180,h=280*vals[i]/12000*p,next=280*vals[Math.min(3,i+1)]/12000*p;let grad=g.createLinearGradient(x,220,x+170,490);grad.addColorStop(0,C[i]+'e8');grad.addColorStop(1,C[i]+'88');
+ g.beginPath();g.moveTo(x,355-h/2);g.lineTo(x+80,355-h/2);g.bezierCurveTo(x+120,355-h/2,x+130,355-next/2,x+174,355-next/2);g.lineTo(x+174,355+next/2);g.bezierCurveTo(x+130,355+next/2,x+120,355+h/2,x+80,355+h/2);g.lineTo(x,355+h/2);g.closePath();g.fillStyle=grad;g.fill();g.strokeStyle=C[i]+'90';g.lineWidth=1.5;g.stroke();
+ if(u>.45){rr(x+37,333,96,40,20,'#080d17ab');text([100,60,30,15][i]+'%',x+85,353,22,WHITE,'center')}
+ rr(x,500,170,52,12,'#ffffff06');dot(x+17,519,4,C[i]);text(names[i],x+30,518,18,MUTED);text(vals[i].toLocaleString('en-US'),x+150,535,23,WHITE,'right',false,700);
+ }
+ footer('相邻转化  60% → 50% → 50%','阶段逐步收窄');cursor(725,388,u);
+}
+function ribbon(x1,y1,x2,y2,h,c,alpha,p){g.save();g.globalAlpha=alpha;g.beginPath();g.rect(180,175,460*p,380);g.clip();g.beginPath();g.moveTo(x1,y1);g.bezierCurveTo(x1+210,y1,x2-210,y2,x2,y2);g.lineTo(x2,y2+h);g.bezierCurveTo(x2-210,y2+h,x1+210,y1+h,x1,y1+h);g.closePath();let grad=g.createLinearGradient(x1,0,x2,0);grad.addColorStop(0,c+'95');grad.addColorStop(1,c+'45');g.fillStyle=grad;g.fill();g.strokeStyle=c+'70';g.lineWidth=1;g.stroke();g.restore()}
+function bez(a,b,c,d,t){return (1-t)**3*a+3*(1-t)**2*t*b+3*(1-t)*t*t*c+t**3*d}
+function sankey(u){
+ shell('TRAFFIC / 流量去向','100','千次');let p=ease((u+.1)/.75),focus=u>1.05;
+ const bands=[[220,220,100.8,0],[320.8,428,67.2,0],[428,320.8,67.2,1],[495.2,495.2,44.8,1]];
+ for(const[y1,y2,h,c]of bands){let alpha=focus&&c===1?.24:1;ribbon(214,y1,622,y2,h,C[c],alpha,p);if(u>.5){for(let k=0;k<3;k++){let q=((u*.24+k*.31+c*.17)%1)*p,x=bez(214,424,412,622,q),y=bez(y1+h/2,y1+h/2,y2+h/2,y2+h/2,q);g.globalAlpha=alpha;dot(x,y,2.5,C[c]);g.globalAlpha=1}}}
+ for(let i=0;i<2;i++){let y=i?428:220,h=i?112:168;rr(196,y,18,h,9,C[i]);rr(622,y,18,h,9,'#c5d3dc6b');text(i?'社交':'搜索',172,y+38,25,focus&&i?'#697383':WHITE,'right');text(i?'40':'60',172,y+72,23,C[i],'right');text(i?'购买':'阅读',660,y+38,25);text(i?'40%':'60%',660,y+74,27,C[i]);}
+ footer(focus?'聚焦搜索：阅读 36 · 购买 24':'带宽表示数量，流入等于流出','100 → 100');cursor(256+150*ease((u-.65)/.5),285,u);
+}
+function arc(cx,cy,r,a1,a2,width,color){g.beginPath();g.arc(cx,cy,r,a1,a2);g.strokeStyle=color;g.lineWidth=width;g.lineCap='round';g.stroke()}
+function rings(u){
+ shell('PROJECT / 项目进度','3','个目标');const vals=[86,68,42],labels=['设计','开发','测试'],focus=u>=1?1:0,cx=296,cy=369;
+ vals.forEach((v,i)=>{let r=151-i*39,p=ease((u+.12-i*.09)/.8);arc(cx,cy,r,-Math.PI/2,Math.PI*1.5,20,'#ffffff09');arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*v/100*p,20,i===focus?C[i]:C[i]+'60');let a=-Math.PI/2+Math.PI*2*v/100*p;dot(cx+Math.cos(a)*r,cy+Math.sin(a)*r,4,'#f4f8f5');let y=276+i*93;if(i===focus){rr(522,y-30,270,64,15,'#ffffff0c');g.strokeStyle=C[i]+'30';g.lineWidth=1;g.stroke()}dot(545,y,5,C[i]);text(labels[i],566,y,25,i===focus?WHITE:MUTED);text(v+'%',767,y,30,C[i],'right',false,700)});
+ text(Math.round(vals[focus]*ease((u+.15)/.8))+'%',cx,360,53,WHITE,'center',false,700);text(labels[focus],cx,407,22,MUTED,'center');footer('每个圆环，独立的 100% 目标','多项进度');cursor(670,280+93*ease((u-.6)/.5),u);
+}
+function gauge(u){
+ let p=ease((u+.06)/1),v=72*p;shell('TARGET / 本月目标',Math.round(720*p).toString(),'/ 1,000');let cx=425,cy=460,r=212;
+ arc(cx,cy,r,Math.PI,Math.PI*2,35,'#ffffff0b');for(let i=0;i<10;i++){let a=Math.PI+i*Math.PI/10+.014,end=Math.min(Math.PI+(i+1)*Math.PI/10-.014,Math.PI+Math.PI*v/100);if(end>a)arc(cx,cy,r,a,end,35,i<5?C[0]:C[2])}
+ for(let i=0;i<=10;i++){let a=Math.PI+i*Math.PI/10;line(cx+Math.cos(a)*245,cy+Math.sin(a)*245,cx+Math.cos(a)*(i%5?253:261),cy+Math.sin(a)*(i%5?253:261),'#cedae66a',2)}
+ let a=Math.PI+Math.PI*v/100;line(cx+Math.cos(a)*146,cy+Math.sin(a)*146,cx+Math.cos(a)*194,cy+Math.sin(a)*194,'#e4f1ee',4);dot(cx+Math.cos(a)*194,cy+Math.sin(a)*194,4,'#f4faf8');text(Math.round(v)+'%',425,357,75,WHITE,'center',false,700);text('目标达成',425,415,23,MUTED,'center');text('0',197,506,22,MUTED,'center');text('100%',657,506,22,MUTED,'center');footer('已完成 720  /  剩余 280','距目标 28%');
+}
+const areaData=[[12,15,13,20,22,27],[8,11,10,14,17,19],[4,6,5,8,9,12]];
+function area(u){
+ const p=ease((u+.1)/.85),k=Math.min(5,Math.max(0,Math.floor((u-.4)*3))),sum=areaData.reduce((s,a)=>s+a[k],0);shell('CHANNELS / 渠道贡献',sum.toString(),'K 访问');
+ const x=i=>100+i*132,y=v=>508-v/60*280;[0,20,40,60].forEach(v=>{line(100,y(v),760,y(v),'#ffffff10');text(v+'K',80,y(v),18,MUTED,'right')});
+ g.save();g.beginPath();g.rect(90,200,690*p,320);g.clip();let base=[0,0,0,0,0,0];areaData.forEach((data,j)=>{let top=data.map((v,i)=>v+base[i]);g.beginPath();top.forEach((v,i)=>i?g.lineTo(x(i),y(v)):g.moveTo(x(i),y(v)));for(let i=5;i>=0;i--)g.lineTo(x(i),y(base[i]));g.closePath();let grad=g.createLinearGradient(0,215,0,510);grad.addColorStop(0,C[j]+'90');grad.addColorStop(1,C[j]+'22');g.fillStyle=grad;g.fill();g.beginPath();top.forEach((v,i)=>i?g.lineTo(x(i),y(v)):g.moveTo(x(i),y(v)));g.strokeStyle=C[j];g.lineWidth=2;g.stroke();base=top});g.restore();
+ for(let i=0;i<6;i++)text('0'+(i+1),x(i),535,20,MUTED,'center');if(u>.75){line(x(k),200,x(k),508,'#e5f6f066',2);let total=0;areaData.forEach((a,j)=>{total+=a[k];dot(x(k),y(total),5,C[j])});tooltip('合计 '+sum+'K',Math.min(646,Math.max(72,x(k)-70)),Math.max(172,y(sum)-65),148);cursor(x(k)+9,y(sum)+20,u)}
+ footer('直接 '+areaData[0][k]+'  /  搜索 '+areaData[1][k]+'  /  社交 '+areaData[2][k],'单位：千次');
+}
+const charts=[funnel,sankey,rings,gauge,area];
+function panel(fn,x,y,s,u,angle=0){g.save();g.translate(x,y);g.rotate(angle);g.scale(s,s);fn(u);g.restore()}
+function collage(u){let bob=7*Math.sin(u*1.35);panel(funnel,925,205+bob,.47,u+1,-.035);panel(sankey,1365,190-bob,.47,u+.8,.035);panel(rings,845,620-bob,.35,u+1,-.04);panel(gauge,1172,600+bob,.35,u+1,.025);panel(area,1500,625-bob,.35,u+.8,-.025);[['01 漏斗',1115,552],['02 流向',1575,550],['03 多环',992,890],['04 仪表',1320,877],['05 面积',1645,890]].forEach(([s,x,y])=>text(s,x,y,25,'#cbd8e2','center'))}
+const labels=[['00 / INTRO','Glass',V.intro||'黑玻璃，让数据发光','15 秒 · 五种统计 UI'],['01 / CONVERSION','Funnel','漏斗看转化','哪一步，人变少了？'],['02 / DESTINATION','Flow','流向看去处','从哪里来，往哪里去。'],['03 / PROGRESS','Rings','多环看进度','多个目标，各走多远。'],['04 / GOAL','Gauge','仪表看达成','离目标，还差多少。'],['05 / COMPOSITION','Layers','面积看构成','总量变化，谁在推动？'],['06 / FINALE','Clarity','看见数字',V.ending||'也看清方向。']];
+function scene(sc,t){const u=t-starts[sc];background(t);line(104,112,1816,112,'#c4deec25');dot(112,70,5,C[0]);text('MOTION STUDIES / 03',132,70,21,'#b4c3d0');text('五种统计 UI · 看清数据的另一面',1816,70,21,'#b4c3d0','right');
+ const L=labels[sc],offset=sc?20*(1-ease(u/.3)):0;text(L[0],112,285+offset,23,C[0]);let title=g.createLinearGradient(105,320,660,520);title.addColorStop(0,'#f3f7f8');title.addColorStop(.5,'#d0dbe4');title.addColorStop(1,'#8e9aaa');text(L[1],105,422+offset,sc===0?195:177,title,'left',true);text(L[2],112,571+offset,sc===0?57:68,WHITE,'left',false,700);text(L[3],112,650+offset,sc===6?58:34,sc===6?'#dbe5ec':MUTED);
+ if(sc===0||sc===6)collage(u);else panel(charts[sc-1],900,220+22*(1-ease(u/.4)),1,u);
+ line(104,967,1816,967,'#c4deec25');text('示例数据 · 非真实业务统计',104,1013,20,'#82909f');text('CONVERSION  /  FLOW  /  PROGRESS  /  GOAL  /  COMPOSITION',1816,1013,18,'#82909f','right');g.fillStyle=C[0];g.fillRect(0,1075,t/15*1920,5);
+}
+window.draw=function(t){t=Math.max(0,Math.min(14.999,t));let sc=0;for(let i=1;i<starts.length;i++)if(t>=starts[i])sc=i;scene(sc,t)};
+const tl=gsap.timeline({paused:true});starts.forEach((s,i)=>tl.addLabel('scene:'+i,s));OM.clock(tl,t=>draw(t),15);window.__timelines={'glass-stats':tl};OM.region('titles',()=>[100,260,710,430],'章节标题与讲解');OM.region('chart',t=>t>=starts[1]&&t<starts[6]?[900,220,850,660]:[830,175,990,750],'图表');
+window.ready=Promise.all([document.fonts.load('500 30px SC'),document.fonts.load('700 60px SC')]).then(()=>document.fonts.ready).then(()=>draw(0));
+</script><audio id="om-sound" src="assets/sound.wav" preload="auto"></audio></body></html>

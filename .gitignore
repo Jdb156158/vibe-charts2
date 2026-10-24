@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+.venv/
+film/.om/
+film/out/
+film/frames/
+film/charts-glass-15s.mp4
